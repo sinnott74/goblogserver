@@ -1,0 +1,5 @@
+/vendor/
+goblogserver
+debug
+*.test
+Dockerfile
