@@ -10,10 +10,34 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func BenchmarkSaveUser(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		ctx := context.Background()
+		transaction := database.NewTransaction(ctx)
+		ctx = database.SetTransaction(ctx, transaction)
+
+		user := &User{Username: "reflect16@test.com", Firstname: "Test", Lastname: "Reflection", DOB: time.Now().UTC().Round(time.Microsecond)}
+		err := orm.Save(ctx, user)
+		assert.NoError(b, err, "Error during initial save")
+		assert.True(b, user.ID != 0, "ID not set after Insert")
+
+		user.Lastname = "Save"
+		err = orm.Save(ctx, user)
+		assert.NoError(b, err, "Error during modify save")
+
+		userByID := &User{ID: user.ID}
+		err = orm.Get(ctx, userByID)
+		assert.NoError(b, err, "Error reading a User back")
+		assert.Equal(b, user, userByID, "User saved is not the same as user read")
+		transaction.Rollback()
+	}
+}
+
 func TestSaveUser(t *testing.T) {
 	ctx := context.Background()
 	transaction := database.NewTransaction(ctx)
 	ctx = database.SetTransaction(ctx, transaction)
+	defer transaction.Rollback()
 
 	user := &User{Username: "reflect16@test.com", Firstname: "Test", Lastname: "Reflection", DOB: time.Now().UTC().Round(time.Microsecond)}
 	err := orm.Save(ctx, user)
@@ -28,7 +52,6 @@ func TestSaveUser(t *testing.T) {
 	err = orm.Get(ctx, userByID)
 	assert.NoError(t, err, "Error reading a User back")
 	assert.Equal(t, user, userByID, "User saved is not the same as user read")
-	transaction.Rollback()
 }
 
 func TestInsertUser(t *testing.T) {
@@ -36,6 +59,7 @@ func TestInsertUser(t *testing.T) {
 	ctx := context.Background()
 	transaction := database.NewTransaction(ctx)
 	ctx = database.SetTransaction(ctx, transaction)
+	defer transaction.Rollback()
 
 	user := &User{Username: "reflect16@test.com", Firstname: "Test", Lastname: "Reflection", DOB: time.Now().UTC().Round(time.Microsecond)}
 	err := orm.Insert(ctx, user)
@@ -47,7 +71,6 @@ func TestInsertUser(t *testing.T) {
 	err = orm.Get(ctx, userByID)
 	assert.NoError(t, err, "Error reading a User back")
 	assert.Equal(t, user, userByID, "User inserted is not the same as user read")
-	transaction.Rollback()
 }
 
 func TestInsertUserWithUsernameTaken(t *testing.T) {
@@ -55,6 +78,7 @@ func TestInsertUserWithUsernameTaken(t *testing.T) {
 	ctx := context.Background()
 	transaction := database.NewTransaction(ctx)
 	ctx = database.SetTransaction(ctx, transaction)
+	defer transaction.Rollback()
 
 	user := &User{Username: "reflect15@test.com", Firstname: "Test", Lastname: "Reflection", DOB: time.Now()}
 	err := orm.Insert(ctx, user)
@@ -68,6 +92,7 @@ func TestUpdateUser(t *testing.T) {
 	ctx := context.Background()
 	transaction := database.NewTransaction(ctx)
 	ctx = database.SetTransaction(ctx, transaction)
+	defer transaction.Rollback()
 
 	user := &User{Username: "reflect16@test.com", Firstname: "Test", Lastname: "Reflection", DOB: time.Now().UTC().Round(time.Microsecond)}
 	err := orm.Insert(ctx, user)
@@ -83,7 +108,6 @@ func TestUpdateUser(t *testing.T) {
 	err = orm.Get(ctx, userByID)
 	assert.NoError(t, err, "Error reading a User back")
 	assert.Equal(t, expectedUser, userByID, "User modifed is not the same as user read")
-	transaction.Rollback()
 }
 
 func TestDeleteUser(t *testing.T) {
@@ -91,6 +115,7 @@ func TestDeleteUser(t *testing.T) {
 	ctx := context.Background()
 	transaction := database.NewTransaction(ctx)
 	ctx = database.SetTransaction(ctx, transaction)
+	defer transaction.Rollback()
 
 	user := &User{Username: "reflect16@test.com", Firstname: "Test", Lastname: "Reflection", DOB: time.Now().UTC().Round(time.Microsecond)}
 	err := orm.Insert(ctx, user)
@@ -109,5 +134,4 @@ func TestDeleteUser(t *testing.T) {
 	count, err = orm.Count(ctx, userByID)
 	assert.NoError(t, err, "Error during count after delete")
 	assert.Equal(t, expectedCountAfterDelete, count, "User count incorrect")
-	transaction.Rollback()
 }
