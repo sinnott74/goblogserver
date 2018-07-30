@@ -30,14 +30,6 @@ func main() {
 		port = "8000"
 	}
 
-	// s := &http.Server{
-	// 	Addr:    ":" + port,
-	// 	Handler: r,
-	// }
-	// s.SetKeepAlivesEnabled
-
-	// s.ListenAndServe()
-
 	// Listen for requests
 	r.Run(":" + port)
 }
