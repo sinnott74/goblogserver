@@ -30,7 +30,7 @@ func executeQueryRow(ctx context.Context, query string, values ...interface{}) *
 
 // Saves an entity
 func Save(ctx context.Context, entity interface{}) error {
-	err := callHook(entity, "PreInsert", ctx)
+	err := callHook(entity, "PreSave", ctx)
 	if err != nil {
 		return err
 	}
