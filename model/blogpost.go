@@ -5,6 +5,7 @@ import (
 	"time"
 )
 
+// BlogPost entity
 type BlogPost struct {
 	ID        int64
 	Title     string
@@ -13,6 +14,7 @@ type BlogPost struct {
 	CreatedOn time.Time
 }
 
+// PreInsert hook which sets the CreatedOn date
 func (b *BlogPost) PreInsert(ctx context.Context) error {
 	b.CreatedOn = time.Now().UTC()
 	return nil

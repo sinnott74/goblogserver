@@ -13,6 +13,7 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
+// Credential entity
 type Credential struct {
 	ID        int64
 	Password  string
@@ -21,8 +22,8 @@ type Credential struct {
 	UserID    int64
 }
 
+// PreInsert hook to encrypt password & deactivate previous passwords
 func (c *Credential) PreInsert(ctx context.Context) error {
-
 	err := c.deactivePreviousCredential(ctx)
 	if err != err {
 		return err
@@ -38,7 +39,6 @@ func (c *Credential) PreInsert(ctx context.Context) error {
 }
 
 func (c *Credential) deactivePreviousCredential(ctx context.Context) error {
-
 	prevActiveCred := &Credential{UserID: c.UserID, Active: true}
 	set := &Credential{Active: true}
 	return orm.Update(ctx, set, prevActiveCred)
