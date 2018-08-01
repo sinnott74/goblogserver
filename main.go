@@ -17,7 +17,6 @@ func main() {
 	r.Use(middleware.RedirectToHTTPSRouter())
 	r.Use(gin.Logger())
 	r.Use(middleware.Compression())
-	r.Use(middleware.ETag())
 	r.Use(gin.Recovery())
 	r.Use(middleware.Transaction())
 
