@@ -8,18 +8,16 @@ import (
 
 	"github.com/sinnott74/goblogserver/orm"
 
-	"github.com/sinnott74/goblogserver/database"
-
 	"golang.org/x/crypto/bcrypt"
 )
 
 // Credential entity
 type Credential struct {
-	ID        int64
-	Password  string
-	Active    bool
-	CreatedOn time.Time
-	UserID    int64
+	ID        int64     `json:"id"`
+	Password  string    `json:"password"`
+	Active    bool      `json:"active"`
+	CreatedOn time.Time `json:"created_on"`
+	UserID    int64     `json:"user_id"`
 }
 
 // PreInsert hook to encrypt password & deactivate previous passwords
@@ -38,6 +36,7 @@ func (c *Credential) PreInsert(ctx context.Context) error {
 	return nil
 }
 
+// deactivePreviousCredential deactives all credentials for this user
 func (c *Credential) deactivePreviousCredential(ctx context.Context) error {
 	prevActiveCred := &Credential{UserID: c.UserID, Active: true}
 	set := &Credential{Active: true}
@@ -58,13 +57,14 @@ func (c *Credential) encrypt() error {
 	return nil
 }
 
+// comparePassword checks the given password against the current credentials encryped password
 func (c *Credential) comparePassword(password string) bool {
 	err := bcrypt.CompareHashAndPassword([]byte(c.Password), []byte(password))
 	return err == nil
 }
 
 // Authenticate validates that the given username & password pairing represents an user
-func (c *Credential) Authenticate(ctx context.Context, username string, password string) bool {
+func Authenticate(ctx context.Context, username string, password string) bool {
 	credential, err := readActiveCredentialByUserName(ctx, username)
 	if err != nil {
 		panic(err)
@@ -72,10 +72,10 @@ func (c *Credential) Authenticate(ctx context.Context, username string, password
 	return credential.comparePassword(password)
 }
 
-func readActiveCredentialByUserName(ctx context.Context, username string) (Credential, error) {
-	var credential Credential
-	t := ctx.Value(database.TransactionKey).(database.Transaction)
-	err := t.Tx().QueryRowContext(ctx, "SELECT * FROM credential WHERE user_id = (SELECT id FROM public.user WHERE username = ?)", username).Scan(&credential)
+// readActiveCredentialByUserName reads the active credential for the given username
+func readActiveCredentialByUserName(ctx context.Context, username string) (*Credential, error) {
+	credential := &Credential{}
+	err := orm.ExecuteQueryRow(ctx, "SELECT * FROM credential WHERE active=true AND user_id = (SELECT id FROM public.user WHERE username = $1)", username).StructScan(credential)
 	if err != nil {
 		return credential, err
 	}

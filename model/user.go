@@ -11,11 +11,11 @@ import (
 
 // User entity
 type User struct {
-	ID        int64
-	Username  string
-	Firstname string
-	Lastname  string
-	DOB       time.Time
+	ID        int64     `json:"id"`
+	Username  string    `json:"username"`
+	Firstname string    `json:"firstname"`
+	Lastname  string    `json:"lastname"`
+	DOB       time.Time `json:"dob"`
 }
 
 // PreInsert is called before a user is inserted into the User table
