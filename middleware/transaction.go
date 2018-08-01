@@ -12,12 +12,15 @@ func Transaction() gin.HandlerFunc {
 		ctx := database.SetTransaction(c.Request.Context(), t)
 		c.Request = c.Request.WithContext(ctx)
 		defer func() {
-			r := recover()
-			if r != nil {
-				t.Rollback()
-				panic(r)
+			if r := recover(); r != nil {
+				err := t.Rollback()
+				panic(err)
+			} else if c.IsAborted() {
+				err := t.Rollback()
+				panic(err)
 			} else {
-				t.Commit()
+				err := t.Commit()
+				panic(err)
 			}
 		}()
 		c.Next()
