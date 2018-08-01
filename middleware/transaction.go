@@ -1,15 +1,13 @@
 package middleware
 
 import (
-	"github.com/sinnott74/goblogserver/database"
-
 	"github.com/gin-gonic/gin"
+	"github.com/sinnott74/goblogserver/database"
 )
 
 func Transaction() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		t := database.NewTransaction(c.Request.Context())
-		ctx := database.SetTransaction(c.Request.Context(), t)
+		t, ctx := database.NewTransaction(c.Request.Context())
 		c.Request = c.Request.WithContext(ctx)
 		defer func() {
 			if r := recover(); r != nil {

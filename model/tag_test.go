@@ -12,9 +12,7 @@ import (
 
 func TestFindByTagName(t *testing.T) {
 
-	ctx := context.Background()
-	transaction := database.NewTransaction(ctx)
-	ctx = database.SetTransaction(ctx, transaction)
+	transaction, ctx := database.NewTransaction(context.Background())
 	defer transaction.Rollback()
 
 	tagName := "TestTag"

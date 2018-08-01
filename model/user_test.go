@@ -12,9 +12,7 @@ import (
 
 func BenchmarkSaveUser(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		ctx := context.Background()
-		transaction := database.NewTransaction(ctx)
-		ctx = database.SetTransaction(ctx, transaction)
+		transaction, ctx := database.NewTransaction(context.Background())
 
 		user := &User{Username: "reflect16@test.com", Firstname: "Test", Lastname: "Reflection", DOB: time.Now().UTC().Round(time.Microsecond)}
 		err := orm.Save(ctx, user)
@@ -34,9 +32,7 @@ func BenchmarkSaveUser(b *testing.B) {
 }
 
 func TestSaveUser(t *testing.T) {
-	ctx := context.Background()
-	transaction := database.NewTransaction(ctx)
-	ctx = database.SetTransaction(ctx, transaction)
+	transaction, ctx := database.NewTransaction(context.Background())
 	defer transaction.Rollback()
 
 	user := &User{Username: "reflect16@test.com", Firstname: "Test", Lastname: "Reflection", DOB: time.Now().UTC().Round(time.Microsecond)}
@@ -56,9 +52,7 @@ func TestSaveUser(t *testing.T) {
 
 func TestInsertUser(t *testing.T) {
 
-	ctx := context.Background()
-	transaction := database.NewTransaction(ctx)
-	ctx = database.SetTransaction(ctx, transaction)
+	transaction, ctx := database.NewTransaction(context.Background())
 	defer transaction.Rollback()
 
 	user := &User{Username: "reflect16@test.com", Firstname: "Test", Lastname: "Reflection", DOB: time.Now().UTC().Round(time.Microsecond)}
@@ -75,23 +69,18 @@ func TestInsertUser(t *testing.T) {
 
 func TestInsertUserWithUsernameTaken(t *testing.T) {
 
-	ctx := context.Background()
-	transaction := database.NewTransaction(ctx)
-	ctx = database.SetTransaction(ctx, transaction)
+	transaction, ctx := database.NewTransaction(context.Background())
 	defer transaction.Rollback()
 
 	user := &User{Username: "reflect15@test.com", Firstname: "Test", Lastname: "Reflection", DOB: time.Now()}
 	err := orm.Insert(ctx, user)
 
 	assert.Error(t, err, "Username taken error not returned")
-	transaction.Rollback()
 }
 
 func TestUpdateUser(t *testing.T) {
 
-	ctx := context.Background()
-	transaction := database.NewTransaction(ctx)
-	ctx = database.SetTransaction(ctx, transaction)
+	transaction, ctx := database.NewTransaction(context.Background())
 	defer transaction.Rollback()
 
 	user := &User{Username: "reflect16@test.com", Firstname: "Test", Lastname: "Reflection", DOB: time.Now().UTC().Round(time.Microsecond)}
@@ -112,9 +101,7 @@ func TestUpdateUser(t *testing.T) {
 
 func TestDeleteUser(t *testing.T) {
 
-	ctx := context.Background()
-	transaction := database.NewTransaction(ctx)
-	ctx = database.SetTransaction(ctx, transaction)
+	transaction, ctx := database.NewTransaction(context.Background())
 	defer transaction.Rollback()
 
 	user := &User{Username: "reflect16@test.com", Firstname: "Test", Lastname: "Reflection", DOB: time.Now().UTC().Round(time.Microsecond)}

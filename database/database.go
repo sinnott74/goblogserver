@@ -56,8 +56,10 @@ type Transaction interface {
 }
 
 // NewTransaction creates & begins a new database transaction
-func NewTransaction(ctx context.Context) Transaction {
-	return &transactionImpl{uuid.NewV4(), db.MustBeginTx(ctx, nil)}
+func NewTransaction(ctx context.Context) (Transaction, context.Context) {
+	t := &transactionImpl{uuid.NewV4(), db.MustBeginTx(ctx, nil)}
+	c := SetTransaction(ctx, t)
+	return t, c
 }
 
 // Transaction struct
