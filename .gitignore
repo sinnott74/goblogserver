@@ -1,3 +1,4 @@
 /vendor/
 goblogserver
 debug*
+*.test
