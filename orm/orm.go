@@ -21,14 +21,14 @@ type EntityID struct {
 	ID int64
 }
 
-// executeQueryRow is the central function for execting queries
-func executeQueryRow(ctx context.Context, query string, values ...interface{}) *sqlx.Row {
+// ExecuteQueryRow is the central function for execting queries
+func ExecuteQueryRow(ctx context.Context, query string, values ...interface{}) *sqlx.Row {
 	t := database.GetTransaction(ctx)
 	fmt.Printf("%s - %s - %+v\n", t.ID(), query, values)
 	return t.Tx().QueryRowxContext(ctx, query, values...)
 }
 
-// Saves an entity
+// Save saves an entity
 func Save(ctx context.Context, entity interface{}) error {
 	err := callHook(entity, "PreSave", ctx)
 	if err != nil {
@@ -61,7 +61,7 @@ func Insert(ctx context.Context, entity interface{}) error {
 		values = append(values, entityData.Attributes[keys[i]])
 	}
 	var lastID int64
-	err = executeQueryRow(ctx, query, values...).Scan(&lastID)
+	err = ExecuteQueryRow(ctx, query, values...).Scan(&lastID)
 	if err != nil {
 		return err
 	}
@@ -76,7 +76,7 @@ func Get(ctx context.Context, entity interface{}) error {
 	entityData := getEntityData(entity)
 	query := getQuery(entityData.Name)
 	ID := getID(entity)
-	return executeQueryRow(ctx, query, ID).StructScan(entity)
+	return ExecuteQueryRow(ctx, query, ID).StructScan(entity)
 }
 
 // Update updates the entites specified by the where with the value spcified in the set
@@ -93,7 +93,7 @@ func Update(ctx context.Context, set interface{}, where interface{}) error {
 		values = append(values, whereEntityData.Attributes[whereKey])
 	}
 	query := updateQuery(setEntityData.Name, setKeys, whereKeys)
-	err := executeQueryRow(ctx, query, values...).Scan()
+	err := ExecuteQueryRow(ctx, query, values...).Scan()
 	if err != nil && err != sql.ErrNoRows {
 		return err
 	}
@@ -109,7 +109,7 @@ func Delete(ctx context.Context, entity interface{}) error {
 	entityData := getEntityData(entity)
 	query := deleteByIDQuery(entityData.Name)
 	ID := getID(entity)
-	err = executeQueryRow(ctx, query, ID).Scan()
+	err = ExecuteQueryRow(ctx, query, ID).Scan()
 	if err != nil && err != sql.ErrNoRows {
 		return err
 	}
@@ -131,6 +131,18 @@ func SelectAll(ctx context.Context, entities interface{}, where interface{}) err
 	return err
 }
 
+// SelectOne performs an SQL select query
+func SelectOne(ctx context.Context, entity interface{}) error {
+	entityData := getEntityData(entity)
+	entityKeys := getOrderedKeys(entityData.Attributes)
+	query := selectQuery(entityData.Name, nil, entityKeys)
+	var values []interface{}
+	for _, entityKey := range entityKeys {
+		values = append(values, entityData.Attributes[entityKey])
+	}
+	return ExecuteQueryRow(ctx, query, values...).StructScan(entity)
+}
+
 // Count Counts the number of rows with the given where values
 func Count(ctx context.Context, where interface{}) (int64, error) {
 	whereEntityData := getEntityData(where)
@@ -141,7 +153,7 @@ func Count(ctx context.Context, where interface{}) (int64, error) {
 		values = append(values, whereEntityData.Attributes[whereKeys[i]])
 	}
 	var count int64
-	error := executeQueryRow(ctx, query, values...).Scan(&count)
+	error := ExecuteQueryRow(ctx, query, values...).Scan(&count)
 	if error != nil {
 		return 0, error
 	}
