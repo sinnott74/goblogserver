@@ -3,3 +3,4 @@ goblogserver
 debug
 *.test
 Dockerfile
+*_test.go

@@ -2,3 +2,4 @@
 goblogserver
 *.test
 debug
+*_test.go
