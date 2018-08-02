@@ -6,13 +6,12 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/sinnott74/goblogserver/database"
 	"github.com/sinnott74/goblogserver/orm"
 )
 
 func TestFindByTagName(t *testing.T) {
 
-	transaction, ctx := database.NewTransaction(context.Background())
+	transaction, ctx := orm.NewTransaction(context.Background())
 	defer transaction.Rollback()
 
 	tagName := "TestTag"

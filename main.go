@@ -6,11 +6,16 @@ import (
 	"github.com/sinnott74/goblogserver/middleware"
 
 	"github.com/gin-gonic/gin"
-	_ "github.com/sinnott74/goblogserver/database"
+	"github.com/sinnott74/goblogserver/database"
 	"github.com/sinnott74/goblogserver/routes"
 )
 
 func main() {
+
+	err := database.Init()
+	if err != nil {
+		panic(err)
+	}
 
 	// gin.SetMode(gin.ReleaseMode)
 	r := gin.New()

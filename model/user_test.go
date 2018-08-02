@@ -5,14 +5,13 @@ import (
 	"testing"
 	"time"
 
-	"github.com/sinnott74/goblogserver/database"
 	"github.com/sinnott74/goblogserver/orm"
 	"github.com/stretchr/testify/assert"
 )
 
 func BenchmarkSaveUser(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		transaction, ctx := database.NewTransaction(context.Background())
+		transaction, ctx := orm.NewTransaction(context.Background())
 
 		user := &User{Username: "reflect16@test.com", Firstname: "Test", Lastname: "Reflection", DOB: time.Now().UTC().Round(time.Microsecond)}
 		err := orm.Save(ctx, user)
@@ -32,7 +31,7 @@ func BenchmarkSaveUser(b *testing.B) {
 }
 
 func TestSaveUser(t *testing.T) {
-	transaction, ctx := database.NewTransaction(context.Background())
+	transaction, ctx := orm.NewTransaction(context.Background())
 	defer transaction.Rollback()
 
 	user := &User{Username: "reflect16@test.com", Firstname: "Test", Lastname: "Reflection", DOB: time.Now().UTC().Round(time.Microsecond)}
@@ -52,7 +51,7 @@ func TestSaveUser(t *testing.T) {
 
 func TestInsertUser(t *testing.T) {
 
-	transaction, ctx := database.NewTransaction(context.Background())
+	transaction, ctx := orm.NewTransaction(context.Background())
 	defer transaction.Rollback()
 
 	user := &User{Username: "reflect16@test.com", Firstname: "Test", Lastname: "Reflection", DOB: time.Now().UTC().Round(time.Microsecond)}
@@ -69,7 +68,7 @@ func TestInsertUser(t *testing.T) {
 
 func TestInsertUserWithUsernameTaken(t *testing.T) {
 
-	transaction, ctx := database.NewTransaction(context.Background())
+	transaction, ctx := orm.NewTransaction(context.Background())
 	defer transaction.Rollback()
 
 	user := &User{Username: "reflect15@test.com", Firstname: "Test", Lastname: "Reflection", DOB: time.Now()}
@@ -80,7 +79,7 @@ func TestInsertUserWithUsernameTaken(t *testing.T) {
 
 func TestUpdateUser(t *testing.T) {
 
-	transaction, ctx := database.NewTransaction(context.Background())
+	transaction, ctx := orm.NewTransaction(context.Background())
 	defer transaction.Rollback()
 
 	user := &User{Username: "reflect16@test.com", Firstname: "Test", Lastname: "Reflection", DOB: time.Now().UTC().Round(time.Microsecond)}
@@ -101,7 +100,7 @@ func TestUpdateUser(t *testing.T) {
 
 func TestDeleteUser(t *testing.T) {
 
-	transaction, ctx := database.NewTransaction(context.Background())
+	transaction, ctx := orm.NewTransaction(context.Background())
 	defer transaction.Rollback()
 
 	user := &User{Username: "reflect16@test.com", Firstname: "Test", Lastname: "Reflection", DOB: time.Now().UTC().Round(time.Microsecond)}
