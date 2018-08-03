@@ -21,22 +21,14 @@ func (t *transactionImpl) ID() string {
 
 // Commit a Transaction
 func (t *transactionImpl) Commit() error {
-	err := t.tx.Commit()
-	if err != nil {
-		return err
-	}
 	fmt.Println("Commit " + t.ID())
-	return nil
+	return t.tx.Commit()
 }
 
 // Rollback a Transaction
 func (t *transactionImpl) Rollback() error {
-	err := t.tx.Rollback()
-	if err != nil {
-		return err
-	}
 	fmt.Println("Rollback " + t.ID())
-	return nil
+	return t.tx.Rollback()
 }
 
 func (t *transactionImpl) Tx() *sqlx.Tx {
