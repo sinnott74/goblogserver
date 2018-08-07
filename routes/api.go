@@ -1,20 +1,14 @@
 package routes
 
 import (
-	"github.com/gin-gonic/gin"
+	"github.com/go-chi/chi"
 )
 
-// DefineAPI
-func DefineAPI(router gin.IRouter) {
-	helloworldRouter := router.Group("/helloworld")
-	DefineHelloworldRoute(helloworldRouter)
-
-	userRouter := router.Group("/users")
-	DefineUserRoute(userRouter)
-
-	authRouter := router.Group("/auth")
-	DefineAuthRoute(authRouter)
-
-	blogpostRouter := router.Group("/blogposts")
-	DefineBlogpostRoute(blogpostRouter)
+func ApiRouter() chi.Router {
+	r := chi.NewRouter()
+	r.Mount("/helloworld", HelloWorldRouter())
+	r.Mount("/users", UserRouter())
+	r.Mount("/auth", AuthRouter())
+	r.Mount("/blogposts", BlogpostRouter())
+	return r
 }

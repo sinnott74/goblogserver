@@ -15,7 +15,7 @@ import (
 // const MultipleRecordsFound = errors.New("Multiple Records Found")
 // const SingleRecordExpected = errors.New("Single Records Expected")
 
-type EntityID struct {
+type entityID struct {
 	ID int64
 }
 
@@ -38,7 +38,7 @@ func Save(ctx context.Context, entity interface{}) error {
 	if id == 0 {
 		err = Insert(ctx, entity)
 	} else {
-		entityID := &EntityID{id}
+		entityID := &entityID{id}
 		err = Update(ctx, entity, entityID)
 	}
 	if err != nil {
@@ -47,14 +47,14 @@ func Save(ctx context.Context, entity interface{}) error {
 	return callHook(entity, "PostSave", ctx)
 }
 
-// Insert inserts an entity into the database & sets the returned ID onto the entity
+// Insert  an entity into the database & sets the returned ID onto the entity
 func Insert(ctx context.Context, entity interface{}) error {
 	err := callHook(entity, "PreInsert", ctx)
 	if err != nil {
 		return err
 	}
 	entityData := getEntityData(entity, config)
-	keys := getOrderedKeys(entityData.Attributes)
+	keys := entityData.getOrderedAttributeKeys()
 	query := insertQuery(entityData.Name, keys)
 	var values []interface{}
 	for i := 0; i < len(keys); i++ {
@@ -83,8 +83,8 @@ func Get(ctx context.Context, entity interface{}) error {
 func Update(ctx context.Context, set interface{}, where interface{}) error {
 	setEntityData := getEntityData(set, config)
 	whereEntityData := getEntityData(where, config)
-	setKeys := getOrderedKeys(setEntityData.Attributes)
-	whereKeys := getOrderedKeys(whereEntityData.Attributes)
+	setKeys := setEntityData.getOrderedAttributeKeys()
+	whereKeys := whereEntityData.getOrderedAttributeKeys()
 	var values []interface{}
 	for _, setKey := range setKeys {
 		values = append(values, setEntityData.Attributes[setKey])
@@ -119,7 +119,7 @@ func Delete(ctx context.Context, entity interface{}) error {
 // SelectAll performs an SQL select query
 func SelectAll(ctx context.Context, entities interface{}, where interface{}) error {
 	whereEntityData := getEntityData(where, config)
-	whereKeys := getOrderedKeys(whereEntityData.Attributes)
+	whereKeys := whereEntityData.getOrderedAttributeKeys()
 	query := selectQuery(whereEntityData.Name, nil, whereKeys)
 	var values []interface{}
 	for _, whereKey := range whereKeys {
@@ -136,7 +136,7 @@ func SelectAll(ctx context.Context, entities interface{}, where interface{}) err
 // SelectOne performs an SQL select query
 func SelectOne(ctx context.Context, entity interface{}) error {
 	entityData := getEntityData(entity, config)
-	entityKeys := getOrderedKeys(entityData.Attributes)
+	entityKeys := entityData.getOrderedAttributeKeys()
 	query := selectQuery(entityData.Name, nil, entityKeys)
 	var values []interface{}
 	for _, entityKey := range entityKeys {
@@ -145,10 +145,10 @@ func SelectOne(ctx context.Context, entity interface{}) error {
 	return ExecuteQueryRow(ctx, query, values...).StructScan(entity)
 }
 
-// Count Counts the number of rows with the given where values
+// Count the number of rows with the given where values
 func Count(ctx context.Context, where interface{}) (int64, error) {
 	whereEntityData := getEntityData(where, config)
-	whereKeys := getOrderedKeys(whereEntityData.Attributes)
+	whereKeys := whereEntityData.getOrderedAttributeKeys()
 	query := countQuery(whereEntityData.Name, whereKeys)
 	var values []interface{}
 	for i := 0; i < len(whereKeys); i++ {
@@ -167,6 +167,16 @@ type entityData struct {
 	Attributes map[string]interface{}
 }
 
+// getOrderedAttributeKeys an ordered list of attribute names
+func (e *entityData) getOrderedAttributeKeys() []string {
+	var keys []string
+	for key := range e.Attributes {
+		keys = append(keys, key)
+	}
+	sort.Strings(keys)
+	return keys
+}
+
 // getEntityData uses reflection to pull out the entity's data. i.e its name, columns names & values
 func getEntityData(entity interface{}, config Config) *entityData {
 	entityData := &entityData{}
@@ -176,8 +186,7 @@ func getEntityData(entity interface{}, config Config) *entityData {
 	entityData.Attributes = make(map[string]interface{})
 	for i := 0; i < typ.NumField(); i++ {
 		fieldType := typ.Field(i)
-		columnName := strcase.ToSnake(fieldType.Name)
-		// columnName := getColumnName(fieldType, config)
+		columnName := getColumnName(fieldType, config)
 		fieldVal := val.Field(i)
 		if fieldVal.Interface() != reflect.Zero(fieldVal.Type()).Interface() {
 			entityData.Attributes[columnName] = fieldVal.Interface()
@@ -202,17 +211,6 @@ func getID(entity interface{}) int64 {
 // setID sets the give ID as the ID of the struct
 func setID(entity interface{}, ID int64) {
 	reflect.ValueOf(entity).Elem().FieldByName("ID").SetInt(ID)
-}
-
-// getOrderedKeys returns a sorted list of the map's key
-// removeID specifies whether the key id should be removed from the final list
-func getOrderedKeys(m map[string]interface{}) []string {
-	var keys []string
-	for key := range m {
-		keys = append(keys, key)
-	}
-	sort.Strings(keys)
-	return keys
 }
 
 // callHook calls the given hook on the given entity

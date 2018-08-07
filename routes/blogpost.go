@@ -2,22 +2,48 @@ package routes
 
 import (
 	"net/http"
+	"strconv"
 
-	"github.com/gin-gonic/gin"
+	"github.com/go-chi/chi"
+	"github.com/go-chi/render"
+
 	"github.com/sinnott74/goblogserver/model"
 	"github.com/sinnott74/goblogserver/orm"
 )
 
-func DefineBlogpostRoute(router gin.IRouter) {
-	router.GET("/", getBlogPosts)
+func BlogpostRouter() chi.Router {
+	r := chi.NewRouter()
+	r.Get("/", getBlogPosts)
+	r.Get("/{id}", getBlogPost)
+	return r
 }
 
-func getBlogPosts(c *gin.Context) {
-	ctx := c.Request.Context()
+func getBlogPosts(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
 	blogposts := []model.BlogPost{}
 	err := orm.SelectAll(ctx, &blogposts, &model.BlogPost{})
 	if err != nil {
 		panic(err)
 	}
-	c.JSON(http.StatusOK, blogposts)
+	render.JSON(w, r, blogposts)
+}
+
+func getBlogPost(w http.ResponseWriter, r *http.Request) {
+	id, err := strconv.ParseInt(chi.URLParam(r, "id"), 10, 0)
+	if err != nil {
+		panic(err)
+	}
+	if err != nil {
+		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+		return
+	}
+	ctx := r.Context()
+	blogpost := &model.BlogPost{ID: id}
+	err = orm.SelectOne(ctx, blogpost)
+	if err != nil {
+		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+		return
+		// panic(err)
+	}
+	render.JSON(w, r, blogpost)
 }

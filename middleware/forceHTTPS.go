@@ -2,19 +2,17 @@ package middleware
 
 import (
 	"net/http"
-
-	"github.com/gin-gonic/gin"
 )
 
-// RedirectToHTTPSRouter is middleware which redirects the user to https if the x-forward-proto header is set to http
-func RedirectToHTTPSRouter() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		proto := c.Request.Header.Get("x-forwarded-proto")
-		// fmt.Printf("%+v\n", req)
+// ForceHTTPS is middleware which redirects the user to https if the x-forward-proto header is set to http
+func ForceHTTPS(next http.Handler) http.Handler {
+	fn := func(w http.ResponseWriter, r *http.Request) {
+		proto := r.Header.Get("x-forwarded-proto")
 		if proto == "http" || proto == "HTTP" {
-			c.Redirect(http.StatusPermanentRedirect, "https://"+c.Request.Host+c.Request.RequestURI)
+			http.Redirect(w, r, "https://"+r.Host+r.RequestURI, http.StatusPermanentRedirect)
 			return
 		}
-		c.Next()
+		next.ServeHTTP(w, r)
 	}
+	return http.HandlerFunc(fn)
 }

@@ -1,12 +1,13 @@
 package main
 
 import (
-	"os"
+	"net/http"
 
-	"github.com/sinnott74/goblogserver/middleware"
-
-	"github.com/gin-gonic/gin"
+	"github.com/go-chi/chi"
+	chiMiddleware "github.com/go-chi/chi/middleware"
 	"github.com/sinnott74/goblogserver/database"
+	"github.com/sinnott74/goblogserver/env"
+	"github.com/sinnott74/goblogserver/middleware"
 	"github.com/sinnott74/goblogserver/routes"
 )
 
@@ -17,23 +18,14 @@ func main() {
 		panic(err)
 	}
 
-	// gin.SetMode(gin.ReleaseMode)
-	r := gin.New()
-	r.Use(middleware.RedirectToHTTPSRouter())
-	r.Use(gin.Logger())
-	r.Use(middleware.Compression())
-	r.Use(gin.Recovery())
-	r.Use(middleware.Transaction())
+	r := chi.NewRouter()
+	r.Use(middleware.ForceHTTPS)
+	r.Use(chiMiddleware.StripSlashes)
+	r.Use(chiMiddleware.Logger)
+	r.Use(chiMiddleware.DefaultCompress)
+	r.Use(chiMiddleware.Recoverer)
+	r.Use(middleware.Transaction)
+	r.Mount("/api", routes.ApiRouter())
 
-	apiRouter := r.Group("/api")
-	routes.DefineAPI(apiRouter)
-
-	// Get port
-	port := os.Getenv("PORT")
-	if port == "" {
-		port = "8000"
-	}
-
-	// Listen for requests
-	r.Run(":" + port)
+	http.ListenAndServe(":"+env.Port(), r)
 }

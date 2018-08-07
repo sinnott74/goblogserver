@@ -1,26 +1,29 @@
 package middleware
 
 import (
-	"github.com/gin-gonic/gin"
+	"fmt"
+	"net/http"
+
 	"github.com/sinnott74/goblogserver/orm"
 )
 
-func Transaction() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		t, ctx := orm.NewTransaction(c.Request.Context())
-		c.Request = c.Request.WithContext(ctx)
+func Transaction(next http.Handler) http.Handler {
+	fn := func(w http.ResponseWriter, r *http.Request) {
+		t, ctx := orm.NewTransaction(r.Context())
 		defer func() {
-			if r := recover(); r != nil {
-				err := t.Rollback()
-				panic(err)
-			} else if c.IsAborted() {
-				err := t.Rollback()
-				panic(err)
+			fmt.Println(w.Header())
+			if rec := recover(); rec != nil {
+				t.Rollback()
+				// Panic to let recoverer handle 500
+				panic(rec)
 			} else {
 				err := t.Commit()
-				panic(err)
+				if err != nil {
+					panic(err)
+				}
 			}
 		}()
-		c.Next()
+		next.ServeHTTP(w, r.WithContext(ctx))
 	}
+	return http.HandlerFunc(fn)
 }

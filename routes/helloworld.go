@@ -3,13 +3,16 @@ package routes
 import (
 	"net/http"
 
-	"github.com/gin-gonic/gin"
+	"github.com/go-chi/chi"
+	"github.com/go-chi/render"
 )
 
-func DefineHelloworldRoute(router gin.IRouter) {
-	router.GET("/", getHelloWorld)
+func HelloWorldRouter() chi.Router {
+	r := chi.NewRouter()
+	r.Get("/", getHelloWorld)
+	return r
 }
 
-func getHelloWorld(c *gin.Context) {
-	c.JSON(http.StatusOK, "Hello world")
+func getHelloWorld(w http.ResponseWriter, r *http.Request) {
+	render.JSON(w, r, "Hello world")
 }

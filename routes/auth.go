@@ -1,17 +1,20 @@
 package routes
 
 import (
-	"fmt"
 	"net/http"
 
-	"github.com/gin-gonic/gin"
+	"github.com/go-chi/chi"
+	"github.com/go-chi/render"
+
+	"github.com/sinnott74/goblogserver/auth"
 	"github.com/sinnott74/goblogserver/model"
-	"github.com/sinnott74/goblogserver/orm"
 )
 
-func DefineAuthRoute(router gin.IRouter) {
-	router.POST("/signup", signUp)
-	router.POST("/login", login)
+func AuthRouter() chi.Router {
+	r := chi.NewRouter()
+	r.Post("/login", login)
+	r.With(auth.Middleware).Get("/test", test)
+	return r
 }
 
 type signUpRequest struct {
@@ -19,26 +22,42 @@ type signUpRequest struct {
 	model.Credential
 }
 
-func signUp(c *gin.Context) {
-	ctx := c.Request.Context()
-	var signUpRequest signUpRequest
-	c.BindJSON(&signUpRequest)
-	orm.Insert(ctx, &signUpRequest.User)
-	signUpRequest.UserID = signUpRequest.User.ID
-	orm.Insert(ctx, &signUpRequest.Credential)
-	fmt.Printf("%+v\n", signUpRequest)
+func test(w http.ResponseWriter, r *http.Request) {
+	render.JSON(w, r, "It worked")
 }
+
+// func signUp(c *gin.Context) {
+// 	ctx := c.Request.Context()
+// 	var signUpRequest signUpRequest
+// 	c.BindJSON(&signUpRequest)
+// 	err := orm.Insert(ctx, &signUpRequest.User)
+// 	if err != nil {
+// 		c.AbortWithError(http.StatusInternalServerError, err)
+// 		return
+// 	}
+// 	signUpRequest.UserID = signUpRequest.User.ID
+// 	err = orm.Insert(ctx, &signUpRequest.Credential)
+// 	fmt.Printf("%+v\n", signUpRequest)
+// 	if err != nil {
+// 		c.AbortWithError(http.StatusInternalServerError, err)
+// 		return
+// 	}
+// 	c.JSON(http.StatusOK, "signUpRequest")
+// }
 
 type loginRequest struct {
 	Username string
 	Password string
 }
 
-func login(c *gin.Context) {
-	ctx := c.Request.Context()
-	var loginRequest loginRequest
-	c.BindJSON(&loginRequest)
-	credential := &model.Credential{}
-	authenticated := credential.Authenticate(ctx, loginRequest.Username, loginRequest.Password)
-	c.JSON(http.StatusOK, authenticated)
+func login(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	loginRequest := &loginRequest{}
+	render.DecodeJSON(r.Body, loginRequest)
+	userToken, err := auth.Login(ctx, loginRequest.Username, loginRequest.Password)
+	if err != nil {
+		http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
+		return
+	}
+	render.JSON(w, r, userToken)
 }
