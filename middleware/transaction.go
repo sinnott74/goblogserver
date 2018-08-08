@@ -1,7 +1,6 @@
 package middleware
 
 import (
-	"fmt"
 	"net/http"
 
 	"github.com/sinnott74/goblogserver/orm"
@@ -11,7 +10,6 @@ func Transaction(next http.Handler) http.Handler {
 	fn := func(w http.ResponseWriter, r *http.Request) {
 		t, ctx := orm.NewTransaction(r.Context())
 		defer func() {
-			fmt.Println(w.Header())
 			if rec := recover(); rec != nil {
 				t.Rollback()
 				// Panic to let recoverer handle 500
