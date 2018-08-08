@@ -20,8 +20,8 @@ func BlogpostRouter() chi.Router {
 
 func getBlogPosts(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	blogposts := []model.BlogPost{}
-	err := orm.SelectAll(ctx, &blogposts, &model.BlogPost{})
+	blogposts := []model.Blogpost{}
+	err := orm.SelectAll(ctx, &blogposts, &model.Blogpost{})
 	if err != nil {
 		panic(err)
 	}
@@ -38,7 +38,7 @@ func getBlogPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	ctx := r.Context()
-	blogpost := &model.BlogPost{ID: id}
+	blogpost := &model.Blogpost{ID: id}
 	err = orm.SelectOne(ctx, blogpost)
 	if err != nil {
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
