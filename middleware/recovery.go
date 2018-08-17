@@ -13,6 +13,7 @@ import (
 	chiMiddleware "github.com/go-chi/chi/middleware"
 )
 
+// responseMap stores error type to response status code mappings
 var responseMap = make(map[reflect.Type]int)
 
 // MapErrorResponseStatus configures the a statusCode for a given Error type
@@ -26,6 +27,8 @@ func MapErrorResponseStatus(err error, statusCode int) {
 	responseMap[errType] = statusCode
 }
 
+// getErrorAndStatus check the map for a configures response for a given error
+// Default 500 Internal Server Error is used if nothing is configured
 func getErrorAndStatus(err interface{}) (int, string) {
 	errType := reflect.TypeOf(err)
 	statusCode := responseMap[errType]

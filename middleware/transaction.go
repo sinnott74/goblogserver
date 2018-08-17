@@ -6,6 +6,8 @@ import (
 	"github.com/sinnott74/goblogserver/orm"
 )
 
+// Transaction is middle ware that begins a transaction & adds it onto the request's context
+// It will rollback the transaction is the requets panics, or commit otherwise
 func Transaction(next http.Handler) http.Handler {
 	fn := func(w http.ResponseWriter, r *http.Request) {
 		t, ctx := orm.NewTransaction(r.Context())
