@@ -79,9 +79,15 @@
   ]
   revision = "c126467f60eb25f8f27e5a981f32a87e3965053f"
 
+[[projects]]
+  name = "gopkg.in/guregu/null.v3"
+  packages = ["."]
+  revision = "80515d440932108546bcade467bb7d6968e812e2"
+  version = "v3.4.0"
+
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "66b5e7093c9be4de8ee3e8270dd417dba1ca708bc57fab9e39e97147a187efb5"
+  inputs-digest = "6aabfa458dd26c541ee774e98bf865e7dee0d40905029b31d47474b8a000aa9d"
   solver-name = "gps-cdcl"
   solver-version = 1

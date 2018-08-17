@@ -5,16 +5,21 @@ import (
 	"strings"
 )
 
-// createGetQuery creates a select by id query
-// e.g. SELECT * FROM tablename;
-func getQuery(tableName string) string {
-	return selectQuery(tableName, nil, []string{"id"})
-}
-
 // deleteByIDQuery creates a Delete query which delete by a rows ID field
 // e.g. DELETE FROM test WHERE id=$1
 func deleteByIDQuery(tableName string) string {
 	return deleteQuery(tableName, []string{"id"})
+}
+
+// selectQuery creates a select db query
+// i.e. SELECT col1, col2, col3 FROM table WHERE col1=$1 AND col3=$2;
+// or SELECT * FROM table; if no columneNames or whereNames are given
+func getByIDQuery(tableName string) string {
+	var queryBuilder strings.Builder
+	queryBuilder.WriteString("SELECT * FROM ")
+	queryBuilder.WriteString(tableName)
+	queryBuilder.WriteString(" WHERE id=$1 LIMIT 1;")
+	return queryBuilder.String()
 }
 
 // selectQuery creates a select db query

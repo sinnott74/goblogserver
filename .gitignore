@@ -2,3 +2,6 @@
 goblogserver
 debug*
 *.test
+*.out
+*.cpu
+*.prof

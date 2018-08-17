@@ -7,6 +7,7 @@ import (
 	"reflect"
 	"sort"
 	"strings"
+	"time"
 
 	"github.com/iancoleman/strcase"
 	"github.com/jmoiron/sqlx"
@@ -19,13 +20,15 @@ type entityID struct {
 	ID int64
 }
 
-// ExecuteQueryRow is the central function for execting queries
-func ExecuteQueryRow(ctx context.Context, query string, values ...interface{}) *sqlx.Row {
+// Exec is the central function for execting queries
+func Exec(ctx context.Context, query string, values ...interface{}) (*sqlx.Rows, error) {
 	t := getTransaction(ctx)
+	start := time.Now()
+	rows, err := t.Tx().QueryxContext(ctx, query, values...)
 	if config.Debug {
-		fmt.Printf("%s - %s - %+v\n", t.ID(), query, values)
+		fmt.Printf("%s %s - %s - %+v\n", time.Since(start), t.ID(), query, values)
 	}
-	return t.Tx().QueryRowxContext(ctx, query, values...)
+	return rows, err
 }
 
 // Save saves an entity
@@ -61,7 +64,14 @@ func Insert(ctx context.Context, entity interface{}) error {
 		values = append(values, entityData.Attributes[keys[i]])
 	}
 	var lastID int64
-	err = ExecuteQueryRow(ctx, query, values...).Scan(&lastID)
+	rows, err := Exec(ctx, query, values...)
+	defer rows.Close()
+	if err != nil {
+		return err
+	}
+	if rows.Next() {
+		err = rows.Scan(&lastID)
+	}
 	if err != nil {
 		return err
 	}
@@ -74,9 +84,17 @@ func Insert(ctx context.Context, entity interface{}) error {
 // Get reads a database row by ID
 func Get(ctx context.Context, entity interface{}) error {
 	entityData := getEntityData(entity, config)
-	query := getQuery(entityData.Name)
-	ID := getID(entity)
-	return ExecuteQueryRow(ctx, query, ID).StructScan(entity)
+	query := getByIDQuery(entityData.Name)
+	ID := entityData.Attributes["id"]
+	rows, err := Exec(ctx, query, ID)
+	defer rows.Close()
+	if err != nil {
+		return err
+	}
+	if rows.Next() {
+		return rows.StructScan(entity)
+	}
+	return &NotFoundError{entityData.Name}
 }
 
 // Update updates the entites specified by the where with the value spcified in the set
@@ -93,9 +111,13 @@ func Update(ctx context.Context, set interface{}, where interface{}) error {
 		values = append(values, whereEntityData.Attributes[whereKey])
 	}
 	query := updateQuery(setEntityData.Name, setKeys, whereKeys)
-	err := ExecuteQueryRow(ctx, query, values...).Scan()
+	rows, err := Exec(ctx, query, values...)
+	defer rows.Close()
 	if err != nil && err != sql.ErrNoRows {
 		return err
+	}
+	if rows.Next() {
+		return rows.Scan()
 	}
 	return nil
 }
@@ -109,7 +131,14 @@ func Delete(ctx context.Context, entity interface{}) error {
 	entityData := getEntityData(entity, config)
 	query := deleteByIDQuery(entityData.Name)
 	ID := getID(entity)
-	err = ExecuteQueryRow(ctx, query, ID).Scan()
+	rows, err := Exec(ctx, query, ID)
+	defer rows.Close()
+	if err != nil && err != sql.ErrNoRows {
+		return err
+	}
+	if rows.Next() {
+		err = rows.Scan()
+	}
 	if err != nil && err != sql.ErrNoRows {
 		return err
 	}
@@ -126,10 +155,11 @@ func SelectAll(ctx context.Context, entities interface{}, where interface{}) err
 		values = append(values, whereEntityData.Attributes[whereKey])
 	}
 	t := getTransaction(ctx)
-	if config.Debug {
-		fmt.Printf("%s - %s - %+v\n", t.ID(), query, values)
-	}
+	start := time.Now()
 	err := t.Tx().Select(entities, query, values...)
+	if config.Debug {
+		fmt.Printf("%s %s - %s - %+v\n", time.Since(start), t.ID(), query, values)
+	}
 	return err
 }
 
@@ -142,7 +172,15 @@ func SelectOne(ctx context.Context, entity interface{}) error {
 	for _, entityKey := range entityKeys {
 		values = append(values, entityData.Attributes[entityKey])
 	}
-	return ExecuteQueryRow(ctx, query, values...).StructScan(entity)
+	rows, err := Exec(ctx, query, values...)
+	defer rows.Close()
+	if err != nil {
+		return err
+	}
+	if rows.Next() {
+		return rows.StructScan(entity)
+	}
+	return nil
 }
 
 // Count the number of rows with the given where values
@@ -155,11 +193,15 @@ func Count(ctx context.Context, where interface{}) (int64, error) {
 		values = append(values, whereEntityData.Attributes[whereKeys[i]])
 	}
 	var count int64
-	error := ExecuteQueryRow(ctx, query, values...).Scan(&count)
-	if error != nil {
-		return 0, error
+	rows, err := Exec(ctx, query, values...)
+	defer rows.Close()
+	if err != nil {
+		return 0, err
 	}
-	return count, nil
+	if rows.Next() {
+		err = rows.Scan(&count)
+	}
+	return count, err
 }
 
 type entityData struct {

@@ -3,7 +3,6 @@ package orm
 import (
 	"context"
 	"errors"
-	"fmt"
 
 	"github.com/jmoiron/sqlx"
 	uuid "github.com/satori/go.uuid"
@@ -42,24 +41,23 @@ type Config struct {
 var (
 	config         Config
 	database       *sqlx.DB
-	transactionKey struct{}
+	transactionKey = &contextKey{"Transaction"}
 )
 
 // Init initialised the database connection with configuration
-func Init(c Config) error {
-	fmt.Println("Connecting to DB")
+func Init(c Config) (*sqlx.DB, error) {
 	db, err := sqlx.Connect(c.DriverName, c.ConnURL)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	if c.MaxConns != 0 {
-		db.SetMaxIdleConns(c.MaxConns)
-		db.SetMaxOpenConns(c.MaxConns)
+		// db.SetMaxIdleConns(c.MaxConns)
+		// db.SetMaxOpenConns(c.MaxConns)
 	}
 	db.MapperFunc(c.ToDBMapperFunc)
 	config = c
 	database = db
-	return nil
+	return database, nil
 }
 
 // NewTransaction creates a new ORM transaction
@@ -70,4 +68,15 @@ func NewTransaction(ctx context.Context) (Transaction, context.Context) {
 	t := &transactionImpl{uuid.NewV4(), database.MustBeginTx(ctx, nil)}
 	c := setTransaction(ctx, t)
 	return t, c
+}
+
+// contextKey is a value for use with context.WithValue. It's used as
+// a pointer so it fits in an interface{} without allocation. This technique
+// for defining context keys was copied from Go 1.7's new use of context in net/http.
+type contextKey struct {
+	name string
+}
+
+func (k *contextKey) String() string {
+	return "ORM context value " + k.name
 }

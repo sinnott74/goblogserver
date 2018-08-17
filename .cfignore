@@ -2,5 +2,8 @@
 goblogserver
 debug
 *.test
+*.out
+*.cpu
 Dockerfile
 *_test.go
+.vscode

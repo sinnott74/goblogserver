@@ -6,10 +6,10 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestGetQuery(t *testing.T) {
+func TestGetByIDQuery(t *testing.T) {
 	tableName := "test"
-	expectedQuery := "SELECT * FROM test WHERE id=$1;"
-	query := getQuery(tableName)
+	expectedQuery := "SELECT * FROM test WHERE id=$1 LIMIT 1;"
+	query := getByIDQuery(tableName)
 	assert.Equal(t, expectedQuery, query, "Get query not as expected")
 }
 

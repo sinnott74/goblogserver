@@ -75,9 +75,13 @@ func Authenticate(ctx context.Context, username string, password string) bool {
 // readActiveCredentialByUserName reads the active credential for the given username
 func readActiveCredentialByUserName(ctx context.Context, username string) (*Credential, error) {
 	credential := &Credential{}
-	err := orm.ExecuteQueryRow(ctx, "SELECT * FROM credential WHERE active=true AND user_id = (SELECT id FROM public.user WHERE username = $1)", username).StructScan(credential)
+	rows, err := orm.Exec(ctx, "SELECT * FROM credential WHERE active=true AND user_id = (SELECT id FROM public.user WHERE username = $1)", username)
 	if err != nil {
-		return credential, err
+		return nil, err
+	}
+	err = rows.StructScan(credential)
+	if err != nil {
+		return nil, err
 	}
 	return credential, nil
 }

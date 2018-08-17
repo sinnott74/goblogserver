@@ -21,13 +21,17 @@ func (t *transactionImpl) ID() string {
 
 // Commit a Transaction
 func (t *transactionImpl) Commit() error {
-	fmt.Println("Commit " + t.ID())
+	if config.Debug {
+		fmt.Println("Commit " + t.ID())
+	}
 	return t.tx.Commit()
 }
 
 // Rollback a Transaction
 func (t *transactionImpl) Rollback() error {
-	fmt.Println("Rollback " + t.ID())
+	if config.Debug {
+		fmt.Println("Rollback " + t.ID())
+	}
 	return t.tx.Rollback()
 }
 

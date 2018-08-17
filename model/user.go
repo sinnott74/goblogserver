@@ -3,7 +3,6 @@ package model
 import (
 	"context"
 	"errors"
-	"fmt"
 	"time"
 
 	"github.com/sinnott74/goblogserver/orm"
@@ -20,16 +19,19 @@ type User struct {
 
 // PreInsert is called before a user is inserted into the User table
 func (u *User) PreInsert(ctx context.Context) error {
-	fmt.Println(u.Firstname + u.Lastname)
-	if !u.isUserNameAvailable(ctx) {
+	usernameAvailable, err := u.isUserNameAvailable(ctx)
+	if err != nil {
+		return err
+	}
+	if !usernameAvailable {
 		return errors.New("Username taken")
 	}
 	return nil
 }
 
 // isUserNameAvailable checks is this user's username is available
-func (u *User) isUserNameAvailable(ctx context.Context) bool {
+func (u *User) isUserNameAvailable(ctx context.Context) (bool, error) {
 	userWithSameName := &User{Username: u.Username}
 	count, err := orm.Count(ctx, userWithSameName)
-	return count == 0 && err == nil
+	return count == 0, err
 }

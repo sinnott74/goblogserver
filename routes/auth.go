@@ -10,6 +10,7 @@ import (
 	"github.com/sinnott74/goblogserver/model"
 )
 
+// AuthRouter creates the Authentication routes
 func AuthRouter() chi.Router {
 	r := chi.NewRouter()
 	r.Post("/login", login)

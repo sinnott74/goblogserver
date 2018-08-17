@@ -11,6 +11,7 @@ import (
 	"github.com/sinnott74/goblogserver/orm"
 )
 
+// BlogpostRouter creates the Blogpost routes
 func BlogpostRouter() chi.Router {
 	r := chi.NewRouter()
 	r.Get("/", getBlogPosts)
@@ -19,9 +20,8 @@ func BlogpostRouter() chi.Router {
 }
 
 func getBlogPosts(w http.ResponseWriter, r *http.Request) {
-	ctx := r.Context()
 	blogposts := []model.Blogpost{}
-	err := orm.SelectAll(ctx, &blogposts, &model.Blogpost{})
+	err := orm.SelectAll(r.Context(), &blogposts, &model.Blogpost{})
 	if err != nil {
 		panic(err)
 	}
@@ -31,19 +31,13 @@ func getBlogPosts(w http.ResponseWriter, r *http.Request) {
 func getBlogPost(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.ParseInt(chi.URLParam(r, "id"), 10, 0)
 	if err != nil {
-		panic(err)
-	}
-	if err != nil {
 		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
 		return
 	}
-	ctx := r.Context()
 	blogpost := &model.Blogpost{ID: id}
-	err = orm.SelectOne(ctx, blogpost)
+	err = orm.Get(r.Context(), blogpost)
 	if err != nil {
-		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
-		return
-		// panic(err)
+		panic(err)
 	}
 	render.JSON(w, r, blogpost)
 }

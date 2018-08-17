@@ -7,6 +7,7 @@ import (
 	"github.com/go-chi/render"
 )
 
+// HelloWorldRouter creates the hello world routes
 func HelloWorldRouter() chi.Router {
 	r := chi.NewRouter()
 	r.Get("/", getHelloWorld)

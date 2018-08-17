@@ -10,6 +10,7 @@ import (
 	"github.com/sinnott74/goblogserver/orm"
 )
 
+// UserRouter creates the User routes
 func UserRouter() chi.Router {
 	r := chi.NewRouter()
 	r.Get("/", getUsers)
