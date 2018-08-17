@@ -4,7 +4,7 @@ FROM golang:1.10.3-alpine3.7 as builder
 RUN apk add git
 
 # Download & install the dep
-ADD https://github.com/golang/dep/releases/download/v0.4.1/dep-linux-amd64 /usr/bin/dep
+ADD https://github.com/golang/dep/releases/download/v0.5.0/dep-linux-amd64 /usr/bin/dep
 RUN chmod +x /usr/bin/dep
 
 WORKDIR $GOPATH/src/github.com/sinnott74/goblogserver
