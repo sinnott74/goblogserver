@@ -1,6 +1,9 @@
 package env
 
-import "os"
+import (
+	"os"
+	"strings"
+)
 
 // JWTSecret to be used in during authentication
 func JWTSecret() []byte {
@@ -27,4 +30,13 @@ func Port() string {
 		port = "8000"
 	}
 	return port
+}
+
+// Debug retrieves turns on debugging
+func Debug() bool {
+	debug := os.Getenv("DEBUG")
+	if strings.ToLower(debug) == "true" {
+		return true
+	}
+	return false
 }
