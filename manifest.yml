@@ -1,12 +1,12 @@
 applications:
-- path: .
-  memory: 32M
-  instances: 1
-  name: goblogserver
-  command: goblogserver
-  random-route: true
-  disk_quota: 32M
-  buildpack: https://github.com/cloudfoundry/go-buildpack.git
-  env:
+  - path: .
+    memory: 32M
+    instances: 1
+    name: goblogserver
+    command: goblogserver
+    random-route: true
+    disk_quota: 32M
+    buildpack: https://github.com/cloudfoundry/go-buildpack.git
+    env:
       GOPACKAGENAME: github.com/sinnott74/goblogserver
-      GOVERSION: go1.10.3
+      GOVERSION: go1.11
